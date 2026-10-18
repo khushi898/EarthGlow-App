@@ -2,229 +2,125 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 import Product from './models/Product.js';
 
-const image = (id) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
+// Images stored in frontend/public/images
+const imagePath = (filename) => `/images/${filename}`;
 
 const products = [
-  { name: 'Aloe Vera Hydrating Gel',
-     category: 'Face Care',
-      price: 8.99,
-      stock: 40,
-      featured: true,
-      image: image('photo-1608248543803-ba4f8c70ae0b'),brand: "EarthGlow",
-      images: [
-    image("photo-1608248543803-ba4f8c70ae0b"),
-    image("photo-1556229010-6c3f2c9ca5f8"),
-    image("photo-1620916566398-39f1143ab7be")
-],
-    size: "200 ml",
+  // FACE CARE
+  ['Vitamin C Brightening Face Wash', 'Face Care', 9.99, 35, 'vitamin-c-brightening-face-wash.png'],
+  ['Rose Glow Face Cream', 'Face Care', 12.49, 30, 'rose-glow-face-cream.png'],
+  ['Green Tea Purifying Cleanser', 'Face Care', 7.99, 45, 'green-tea-purifying-cleanser.png'],
+  ['Rose Hydrating Face Toner', 'Face Care', 8.99, 40, 'rose-hydrating-face-toner.png'],
+  ['Shea Butter Moisturizing Face Cream', 'Face Care', 12.99, 35, 'shea-butter-moisturizing-face-cream.png'],
+  ['Walnut Almond Face Scrub', 'Face Care', 9.99, 35, 'walnut-almond-face-scrub.png'],
+  ['Green Tea Oil Control Face Gel', 'Face Care', 8.99, 40, 'green-tea-oil-control-face-gel.png'],
+  ['Turmeric Sandalwood Face Wash', 'Face Care', 9.49, 40, 'turmeric-sandalwood-face-wash.png'],
+  ['Coffee Coconut Face Scrub', 'Face Care', 10.99, 30, 'coffee-coconut-face-scrub.png'],
+  ['Oatmeal Honey Face Scrub', 'Face Care', 10.49, 35, 'oatmeal-honey-face-scrub.png'],
+  ['Aloe Vera Cucumber Facial Toner', 'Face Care', 8.49, 40, 'aloe-vera-cucumber-facial-toner.png'],
+  ['Micellar Cleansing Water', 'Face Care', 9.99, 45, 'micellar-cleansing-water.png'],
+  ['Tea Tree Aloe Face Gel', 'Face Care', 9.49, 40, 'tea-tree-aloe-face-gel.png'],
+  ['Aloe Vera Cucumber Face Moisturizer', 'Face Care', 11.99, 35, 'aloe-vera-cucumber-face-moisturizer.png'],
+  ['Sunscreen SPF50', 'Face Care', 13.99, 40, 'sunscreen-spf50.png'],
+  ['Aloe Vera Cucumber Face Mask', 'Face Care', 11.49, 35, 'aloe-vera-cucumber-face-mask.png'],
+  ['Turmeric Aloe Vera Face Mask', 'Face Care', 11.99, 35, 'turmeric-aloe-vera-face-mask.png'],
+  ['Rose Water Face Toner', 'Face Care', 8.99, 45, 'rose-water-face-toner.png'],
+  ['Detoxifying Clay Face Mask', 'Face Care', 12.49, 30, 'detoxifying-clay-face-mask.png'],
+  ['Tea Tree Neem Face Cleanser', 'Face Care', 9.99, 40, 'tea-tree-neem-face-cleanser.png'],
+  ['Saffron Almond Night Cream', 'Face Care', 15.49, 30, 'saffron-almond-night-cream.png'],
 
-benefits: [
-  "Helps skin feel hydrated",
-  "Lightweight and refreshing",
-  "Suitable for a daily skincare routine"
-],
-ingredients: [
-  "Aloe Vera"
-],
-howToUse: "Apply a small amount to clean skin and gently massage." },
-  { name: 'Vitamin C Brightening Face Wash', category: 'Face Care', price: 9.99, stock: 35, image: image('photo-1556229010-6c3f2c9ca5f8') },
-  { name: 'Rose Glow Face Cream', category: 'Face Care', price: 12.49, stock: 30, image: image('photo-1601049541289-9b1b7bbbfe19') },
-  { name: 'Green Tea Purifying Cleanser', category: 'Face Care', price: 7.99, stock: 45, image: image('photo-1556229010-6c3f2c9ca5f8') },
+  // SERUMS
+  ['Vitamin C Brightening Face Serum', 'Serums', 16.99, 30, 'vitamin-c-brightening-face-serum.png'],
+  ['Rose Brightening Face Serum', 'Serums', 14.99, 35, 'rose-brightening-face-serum.png'],
+  ['Vitamin C Face Serum', 'Serums', 15.99, 35, 'vitamin-c-face-serum.png'],
+  ['Aloe Vera Cucumber Serum', 'Serums', 13.99, 40, 'aloe-vera-cucumber-serum.png'],
 
-  { name: 'Argan Oil Hair Serum', category: 'Hair Care', price: 13.99, stock: 25, featured: true, image: image('photo-1526947425960-945c6e728858') },
-  { name: 'Coconut Nourishing Shampoo', category: 'Hair Care', price: 10.49, stock: 40, image: image('photo-1608248543803-ba4f8c70ae0b') },
-  { name: 'Rosemary Scalp Oil', category: 'Hair Care', price: 11.99, stock: 30, image: image('photo-1526947425960-945c6e728858') },
-  { name: 'Shea Butter Hair Conditioner', category: 'Hair Care', price: 9.49, stock: 35, image: image('photo-1601049541289-9b1b7bbbfe19') },
+  // BODY CARE
+  ['Aloe Soothing Body Wash', 'Body Care', 7.49, 50, 'aloe-soothing-body-wash.png'],
+  ['Coconut Body Scrub', 'Body Care', 10.99, 30, 'coconut-body-scrub.png'],
+  ['Lavender Body Lotion', 'Body Care', 8.99, 40, 'lavender-body-lotion.png'],
+  ['Rose Hand Cream', 'Body Care', 5.99, 45, 'rose-hand-cream.png'],
 
-  { name: 'Lavender Body Lotion', category: 'Body Care', price: 8.99, stock: 40, image: image('photo-1601049541289-9b1b7bbbfe19') },
-  { name: 'Coconut Body Scrub', category: 'Body Care', price: 10.99, stock: 30, image: image('photo-1556229010-6c3f2c9ca5f8') },
-  { name: 'Aloe Soothing Body Wash', category: 'Body Care', price: 7.49, stock: 50, image: image('photo-1608248543803-ba4f8c70ae0b') },
-  { name: 'Rose Hand Cream', category: 'Body Care', price: 5.99, stock: 45, image: image('photo-1601049541289-9b1b7bbbfe19') },
+  // HAIR CARE
+  ['Coconut Nourishing Shampoo', 'Hair Care', 10.49, 40, 'coconut-nourishing-shampoo.png'],
+  ['Shea Butter Hair Conditioner', 'Hair Care', 9.49, 35, 'shea-butter-hair-conditioner.png'],
+  ['Rosemary Scalp Oil', 'Hair Care', 11.99, 30, 'rosemary oil.webp'],
 
-  { name: 'Gentle Baby Shampoo', category: 'Baby Care', price: 6.99, stock: 30, image: image('photo-1608248543803-ba4f8c70ae0b') },
-  { name: 'Baby Soft Moisturising Lotion', category: 'Baby Care', price: 7.49, stock: 35, image: image('photo-1601049541289-9b1b7bbbfe19') },
-  { name: 'Baby Gentle Bath Wash', category: 'Baby Care', price: 6.49, stock: 40, image: image('photo-1556229010-6c3f2c9ca5f8') },
-  { name: 'Baby Nourishing Massage Oil', category: 'Baby Care', price: 8.49, stock: 25, image: image('photo-1526947425960-945c6e728858') },
+  // LIP CARE
+  ['Nourishing Lip Balm', 'Face Care', 5.99, 40, 'nourishing-lip-balm.png'],
+  ['Strawberry Lip Balm', 'Face Care', 5.99, 40, 'strawberry-lip-balm.png'],
 
-  { name: 'Niacinamide Balance Serum', category: 'Serums', price: 14.99, stock: 30, featured: true, image: image('photo-1608248543803-ba4f8c70ae0b') },
-  { name: 'Hyaluronic Acid Hydration Serum', category: 'Serums', price: 15.99, stock: 25, image: image('photo-1601049541289-9b1b7bbbfe19') },
-  { name: 'Rosehip Glow Serum', category: 'Serums', price: 13.49, stock: 35, image: image('photo-1526947425960-945c6e728858') },
-  { name: 'Vitamin E Repair Serum', category: 'Serums', price: 12.99, stock: 30, image: image('photo-1556229010-6c3f2c9ca5f8') },
-
-  {
-  name: "Rose Glow Face Cleanser",
-  category: "Face Care",
-  price: 9.99,
-  stock: 45,
-  image: image("photo-1608248543803-ba4f8c70ae0b")
-},
-{
-  name: "Vitamin C Brightening Cream",
-  category: "Face Care",
-  price: 14.99,
-  stock: 35,
-  image: image("photo-1556229010-6c3f2c9ca5f8")
-},
-{
-  name: "Green Tea Purifying Mask",
-  category: "Face Care",
-  price: 11.49,
-  stock: 40,
-  image: image("photo-1620916566398-39f1143ab7be")
-},
-{
-  name: "Coconut Repair Shampoo",
-  category: "Hair Care",
-  price: 10.99,
-  stock: 50,
-  image: image("photo-1596462502278-27bfdc403348")
-},
-{
-  name: "Argan Smooth Conditioner",
-  category: "Hair Care",
-  price: 11.99,
-  stock: 42,
-  image: image("photo-1601049541289-9b1b7bbbfe19")
-},
-{
-  name: "Rosemary Scalp Oil",
-  category: "Hair Care",
-  price: 13.49,
-  stock: 32,
-  image: image("photo-1571781926291-c477ebfd024b")
-},
-{
-  name: "Shea Butter Body Lotion",
-  category: "Body Care",
-  price: 12.99,
-  stock: 55,
-  image: image("photo-1556228578-0d85b1a4d571")
-},
-{
-  name: "Lavender Body Wash",
-  category: "Body Care",
-  price: 8.99,
-  stock: 60,
-  image: image("photo-1596462502278-27bfdc403348")
-},
-{
-  name: "Cocoa Butter Body Cream",
-  category: "Body Care",
-  price: 14.49,
-  stock: 38,
-  image: image("photo-1608248543803-ba4f8c70ae0b")
-},
-{
-  name: "Baby Soft Moisturising Cream",
-  category: "Baby Care",
-  price: 7.99,
-  stock: 48,
-  image: image("photo-1601049541289-9b1b7bbbfe19")
-},
-{
-  name: "Baby Gentle Shampoo",
-  category: "Baby Care",
-  price: 6.99,
-  stock: 52,
-  image: image("photo-1556229010-6c3f2c9ca5f8")
-},
-{
-  name: "Baby Nourishing Body Lotion",
-  category: "Baby Care",
-  price: 8.49,
-  stock: 44,
-  image: image("photo-1620916566398-39f1143ab7be")
-},
-{
-  name: "Hyaluronic Hydration Serum",
-  category: "Serums",
-  price: 15.99,
-  stock: 36,
-  image: image("photo-1571781926291-c477ebfd024b")
-},
-{
-  name: "Vitamin C Glow Serum",
-  category: "Serums",
-  price: 16.99,
-  stock: 30,
-  image: image("photo-1556228578-0d85b1a4d571")
-},
-{
-  name: "Niacinamide Clarifying Serum",
-  category: "Serums",
-  price: 14.99,
-  stock: 40,
-  image: image("photo-1608248543803-ba4f8c70ae0b")
-}
+  // FACE OIL
+  ['Argan Radiant Face Oil', 'Face Care', 13.99, 30, 'argan-radiant-face-oil.png']
 ];
+
+const slugify = (name) =>
+  name.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 
 async function main() {
   try {
     if (!process.env.MONGO_URI) {
-      throw new Error('MONGO_URI is missing from your .env file');
+      throw new Error('MONGO_URI is missing from .env');
     }
 
     await mongoose.connect(process.env.MONGO_URI);
+    console.log('MongoDB connected');
 
     let added = 0;
-    let skipped = 0;
+    let updated = 0;
 
-    for (const product of products) {
-      const slug = product.name.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
+    for (const [name, category, price, stock, filename] of products) {
+      const slug = slugify(name);
+      const image = imagePath(filename);
 
-  const extraDetails = {
-  brand: product.brand ?? "EarthGlow",
-  size: product.size ?? "",
-  ...(product.images?.length
-    ? {images:product.images}
-    :{}
-  ),
-  benefits: product.benefits ?? [],
-  ingredients: product.ingredients ?? [],
-  howToUse: product.howToUse ?? ""
-};
+      const existing = await Product.findOne({ slug });
 
-const existingProduct = await Product.findOne({ slug });
+      if (existing) {
+        await Product.updateOne(
+          { _id: existing._id },
+          {
+            $set: {
+              name,
+              category,
+              brand: 'EarthGlow',
+              image,
+              images: [image]
+            }
+          }
+        );
 
-if (existingProduct) {
-  await Product.updateOne(
-    { slug },
-    {
-      $set: Object.fromEntries(
-        Object.entries(extraDetails).filter(
-          ([key, value]) =>
-            key !=="_id" &&
-            value !== "" &&
-            (!Array.isArray(value) || value.length > 0)
-        )
-      )
+        updated++;
+        console.log(`Updated: ${name}`);
+      } else {
+        await Product.create({
+          name,
+          slug,
+          category,
+          price,
+          stock,
+          brand: 'EarthGlow',
+          image,
+          images: [image],
+          description: `${name} for your everyday botanical beauty routine.`,
+          featured: false,
+          benefits: [],
+          ingredients: [],
+          howToUse: ''
+        });
+
+        added++;
+        console.log(`Added: ${name}`);
+      }
     }
-  );
 
-  skipped++;
-  continue;
-}
-const result = await Product.create({
-  name: product.name,
-  category: product.category,
-  price: product.price,
-  stock: product.stock,
-  image: product.image,
-  compareAtPrice: product.compareAtPrice ?? null,
-  slug,
-  description: `${product.name} for your everyday botanical beauty routine.`,
-  featured: product.featured ?? false,
-  ...extraDetails
-});
-
-added++;
-    }
-  console.log(`Added ${added} products. Skipped ${skipped} existing products.`);
+    console.log('-------------------------');
+    console.log(`Added: ${added}`);
+    console.log(`Updated: ${updated}`);
+    console.log('EarthGlow products completed!');
   } catch (error) {
-    console.error('Failed to add products:', error);
+    console.error('Product update failed:', error);
     process.exitCode = 1;
   } finally {
     await mongoose.disconnect();
