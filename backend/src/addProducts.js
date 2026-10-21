@@ -14,7 +14,7 @@ const products = [
   ['Shea Butter Moisturizing Face Cream', 'Face Care', 12.99, 35, 'shea-butter-moisturizing-face-cream.png'],
   ['Walnut Almond Face Scrub', 'Face Care', 9.99, 35, 'walnut-almond-face-scrub.png'],
   ['Green Tea Oil Control Face Gel', 'Face Care', 8.99, 40, 'green-tea-oil-control-face-gel.png'],
-  ['Turmeric Sandalwood Face Wash', 'Face Care', 9.49, 40, 'turmeric-sandalwood-face-wash.png'],
+  ['Turmeric Sandlewood Face Wash', 'Face Care', 9.49, 40, 'turmeric-sandlewood-face-wash.png'],
   ['Coffee Coconut Face Scrub', 'Face Care', 10.99, 30, 'coffee-coconut-face-scrub.png'],
   ['Oatmeal Honey Face Scrub', 'Face Care', 10.49, 35, 'oatmeal-honey-face-scrub.png'],
   ['Aloe Vera Cucumber Facial Toner', 'Face Care', 8.49, 40, 'aloe-vera-cucumber-facial-toner.png'],

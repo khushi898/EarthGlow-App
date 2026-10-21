@@ -3,4 +3,7 @@
 **/.env.*
 !**/.env.example
 **/dist/
-node_modules/
+node_modules/backend/src/routes/authRoutes.backup.txt
+ 
+backend/node_modules/ 
+backend/src/routes/authRoutes.backup.txt
