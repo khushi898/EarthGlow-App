@@ -18,12 +18,14 @@ A portfolio e-commerce project inspired by the shopping experience of beauty and
 - Admin dashboard to manage products, stock and order status
 - Server-side prices, stock checks that prevent overselling, and protection against duplicate orders
 - Rate limiting on account and sign-in routes
+- Automated backend and frontend tests
 
 ## Stack
 - Frontend: React + Vite, React Router, Axios, plain CSS
 - Backend: Node.js, Express, MongoDB, Mongoose
 - Auth: bcryptjs + JWT
 - Email: Resend (password reset, plus login codes for the test account)
+- Tests: Vitest, Supertest, Testing Library, GitHub Actions
 
 ## Requirements
 - Node.js 20+
@@ -105,7 +107,18 @@ Sending email needs `RESEND_API_KEY`. The app runs without it, but password-rese
 - **Test mode (`EMAIL_TEST_MODE=true`):** only `EMAIL_TEST_TO` receives email, because Resend's test sender cannot email anyone else. That account must also enter an emailed code to sign in, which needs `OTP_SECRET`.
 - **All customers:** verify a domain with Resend, set `EMAIL_FROM` and set `EMAIL_TEST_MODE=false`.
 
+## Tests
+```bash
+cd backend && npm test    # 96 API tests
+cd frontend && npm test   # 42 interface tests
+```
+Backend tests run the real API with [Vitest](https://vitest.dev) and Supertest against a temporary in-memory MongoDB, so they need no `.env` and never touch a real database. The first run downloads MongoDB, which can take a few minutes. Emails are replaced with a stand-in, so none are sent.
+
+Frontend tests use Testing Library to use the interface as a customer or admin would, with the API's answers supplied by the test.
+
+GitHub Actions runs both on every push.
+
 ## Notes
-- This project does not have automated tests yet.
-- For production, add tests, a payment provider, email verification, logging and deployment configuration.
+- The tests do not cover real email delivery, or how the site looks in a real browser.
+- For production, add a payment provider, email verification, logging and deployment configuration.
 - Never commit `.env` files or real secrets.
