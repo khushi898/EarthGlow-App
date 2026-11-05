@@ -5,6 +5,7 @@ import React, {
 } from 'react';
 
 import {
+  Navigate,
   Route,
   Routes,
   useNavigate
@@ -62,6 +63,11 @@ export default function App() {
     refreshCart();
   }, [refreshCart, user]);
 
+  function showToast(message) {
+    setToast(message);
+    window.setTimeout(() => setToast(''), 2600);
+  }
+
   async function addToCart(product, quantity = 1) {
     if (!user) {
       navigate('/login');
@@ -76,16 +82,12 @@ export default function App() {
 
       await refreshCart();
 
-      setToast(`${product.name} added to your bag`);
-
-      window.setTimeout(() => setToast(''), 2600);
+      showToast(`${product.name} added to your bag`);
     } catch (err) {
-      setToast(
+      showToast(
         err.response?.data?.message ||
         'Could not add product'
       );
-
-      window.setTimeout(() => setToast(''), 2600);
     }
   }
 
@@ -97,7 +99,7 @@ export default function App() {
 
       await refreshCart();
     } catch (err) {
-      setToast(
+      showToast(
         err.response?.data?.message ||
         'Could not update quantity'
       );
@@ -105,8 +107,31 @@ export default function App() {
   }
 
   async function removeItem(productId) {
-    await api.delete(`/cart/items/${productId}`);
-    await refreshCart();
+    try {
+      await api.delete(`/cart/items/${productId}`);
+      await refreshCart();
+    } catch (err) {
+      showToast(
+        err.response?.data?.message ||
+        'Could not remove product'
+      );
+    }
+  }
+
+  // The API protects the admin data; this keeps other visitors off the page itself.
+  function adminPage() {
+    if (!user) return <Navigate to="/login" replace />;
+
+    if (user.role !== 'admin') {
+      return (
+        <main className="page-wrap">
+          <h1>Admin access required</h1>
+          <a href="/">Back home</a>
+        </main>
+      );
+    }
+
+    return <Admin />;
   }
 
   return (
@@ -188,7 +213,7 @@ export default function App() {
 
         <Route
           path="/admin"
-          element={<Admin />}
+          element={adminPage()}
         />
 
         <Route

@@ -1,10 +1,11 @@
 import React, {
   createContext,
   useContext,
+  useEffect,
   useState
 } from 'react';
 
-import api from '../api/client.js';
+import api, { setSessionExpiredHandler } from '../api/client.js';
 
 const AuthContext = createContext(null);
 
@@ -18,6 +19,11 @@ export function AuthProvider({ children }) {
       return null;
     }
   });
+
+  // Sign out when the server rejects the saved token (expired or replaced).
+  useEffect(() => {
+    setSessionExpiredHandler(logout);
+  }, []);
 
   function saveSession(data) {
     if (!data.token || !data.user) {

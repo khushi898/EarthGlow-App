@@ -1,19 +1,27 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import React,{ useState } from 'react';
+import React,{ useEffect, useState } from 'react';
+import api from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 
 export default function Header({ cartCount = 0 }) {
   const [menuOpen,setMenuOpen]=useState(false);
   const [search, setSearch] = useState('');
+  const [categories, setCategories] = useState([]);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  // The menu lists the categories that really have products, so no link leads to an empty page.
+  useEffect(() => {
+    api.get('/categories').then(({ data }) => setCategories(data.categories)).catch(() => {});
+  }, []);
+
   function submit(e) {
     e.preventDefault();
     navigate(`/?search=${encodeURIComponent(search)}`);
   }
   return <>
-    <div className="announcement">A little care, every day • Free delivery over £35</div>
+    <div className="announcement">A little care, every day • Demo store: no payment or delivery</div>
     <header className="site-header">
       <Link className="brand" to="/">earth<span>glow</span><small>BOTANICAL BEAUTY</small></Link>
       <form className="search-form" onSubmit={submit}>
@@ -22,11 +30,7 @@ export default function Header({ cartCount = 0 }) {
       </form>
       <nav className="header-actions">
         {user ? <><span className="welcome">Hi, {user.name.split(' ')[0]}</span>
-        {/*dmin only*/}
-        {/* {user?.isAdmin && (
-         
-        )} */}
-        {user ?.isAdmin &&(
+        {user.role === 'admin' && (
           <Link to="/admin">Admin</Link>
         )}
         <button className="text-button" onClick={() => { logout(); navigate('/'); }}>Log out</button></> : <Link to="/login">Sign in</Link>}
@@ -39,11 +43,9 @@ export default function Header({ cartCount = 0 }) {
       {menuOpen ? "x Close":"Menu"}
     </button>
     <nav className={`category-nav ${menuOpen ? 'menu-open' : ''}`}>
-      <NavLink to="/?category=Face Care">Face</NavLink>
-      <NavLink to="/?category=Hair Care">Hair</NavLink>
-      <NavLink to="/?category=Body Care">Body</NavLink>
-      <NavLink to="/?category=Baby Care">Baby</NavLink>
-      <NavLink to="/?category=Serums">Serums</NavLink>
+      {categories.map(category => (
+        <Link key={category} to={`/?category=${encodeURIComponent(category)}`}>{category}</Link>
+      ))}
       <NavLink to="/orders">My orders</NavLink>
     </nav>
   </>;

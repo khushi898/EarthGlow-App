@@ -14,22 +14,32 @@ export default function Home({ onAdd }) {
   const [error, setError] = useState('');
   const [page,setPage]=useState(1);
   const [totalPages,setTotalPages]=useState(1);
+  const [totalProducts,setTotalProducts]=useState(0);
 
   useEffect(()=>{
     setPage(1);
   }, [search,category]);
 
   useEffect(() => {
+    // Ignore this response if the search or page changes before it arrives.
+    let stale = false;
     setLoading(true);
     api.get('/products', { params: { search, category,page, limit: 12} })
-      .then(({ data }) => { setProducts(prev=> page===1?data.products:[...prev,...data.products]);
+      .then(({ data }) => {
+        if (stale) return;
+        setProducts(prev=> page===1?data.products:[...prev,...data.products]);
         setTotalPages(data.pages);
+        setTotalProducts(data.total);
         setError('');
       })
-      .catch(() => setError('Could not load products. Check that the backend and MongoDB are running.'))
-      .finally(() => setLoading(false));
-    api.get('/categories').then(({ data }) => setCategories(data.categories)).catch(() => {});
+      .catch(() => { if (!stale) setError('Could not load products. Please try again in a moment.'); })
+      .finally(() => { if (!stale) setLoading(false); });
+    return () => { stale = true; };
   }, [search, category,page]);
+
+  useEffect(() => {
+    api.get('/categories').then(({ data }) => setCategories(data.categories)).catch(() => {});
+  }, []);
 
   return <main>
     <section className="hero">
@@ -54,9 +64,9 @@ export default function Home({ onAdd }) {
     </section>
 
     <section id="shop" className="shop-section">
-      <div className="section-heading"><div><p className="eyebrow">FIND YOUR FAVOURITES</p><h2>{search ? `Results for “${search}”` : category || 'Everyday essentials'}</h2></div><span>{products.length} products</span></div>
+      <div className="section-heading"><div><p className="eyebrow">FIND YOUR FAVOURITES</p><h2>{search ? `Results for “${search}”` : category || 'Everyday essentials'}</h2></div><span>{totalProducts} products</span></div>
       {categories.length > 0 && <div className="category-chips"><a className={!category ? 'active' : ''} href="/">All products</a>{categories.map(c => <a key={c} className={category === c ? 'active' : ''} href={`/?category=${encodeURIComponent(c)}`}>{c}</a>)}</div>}
-      {loading ? <p className="state-message">Loading your essentials…</p> : error ? <p className="state-message error">{error}</p> : products.length ? <div className="product-grid">{products.map(p => <ProductCard key={p._id} product={p} onAdd={onAdd} />)}</div> : <p className="state-message">No products found. Try another search.</p>}
+      {loading && page === 1 ? <p className="state-message">Loading your essentials… the first visit can take up to a minute.</p> : error ? <p className="state-message error">{error}</p> : products.length ? <div className="product-grid">{products.map(p => <ProductCard key={p._id} product={p} onAdd={onAdd} />)}</div> : <p className="state-message">No products found. Try another search.</p>}
 
       {!loading && page < totalPages && (
   <div style={{ textAlign: 'center', margin: '30px 0' }}>

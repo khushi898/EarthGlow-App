@@ -13,7 +13,7 @@ export default function ProductCard({ product, onAdd }) {
       <div className="price-row"><strong>£{product.price.toFixed(2)}</strong>{product.compareAtPrice && <del>£{product.compareAtPrice.toFixed(2)}</del>}</div>
       <button className="button button-small" onClick={() => onAdd(product)}
         disabled={Number(product.stock)<=0}>
-        {Number(product.stock)>0 ? "Add to bag":"Outof Stock"} 
+        {Number(product.stock)>0 ? "Add to bag":"Out of stock"}
           </button>
     </div>
   </article>;

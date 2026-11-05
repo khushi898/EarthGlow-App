@@ -163,11 +163,7 @@ export default function Cart({
 
             <div>
               <span>Delivery</span>
-              <span>
-                {total >= 35
-                  ? 'Free'
-                  : 'Calculated at checkout'}
-              </span>
+              <span>Free (demo)</span>
             </div>
 
             <p className="muted">
