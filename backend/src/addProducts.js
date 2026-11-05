@@ -48,7 +48,7 @@ const products = [
 
   // LIP CARE
   ['Nourishing Lip Balm', 'Face Care', 5.99, 40, 'nourishing-lip-balm.png'],
-  ['Strawberry Lip Balm', 'Face Care', 5.99, 40, 'strawberry-lip-balm.png'],
+  ['Strawberry Lip Scrub', 'Face Care', 5.99, 40, 'strawberry-lip-balm.png'],
 
   // FACE OIL
   ['Argan Radiant Face Oil', 'Face Care', 13.99, 30, 'argan-radiant-face-oil.png']
