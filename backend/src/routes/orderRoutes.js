@@ -9,10 +9,20 @@ import {
   protect,
   adminOnly
 } from '../middleware/authMiddleware.js';
+import { MAX_QUANTITY } from '../utils/limits.js';
 
 const router = express.Router();
-const MAX_QUANTITY = 100;
 const MAX_ITEMS = 50;
+
+// The statuses an order can move to from each status.
+// Delivered and Cancelled are final.
+const STATUS_TRANSITIONS = {
+  Placed: ['Processing', 'Cancelled'],
+  Processing: ['Shipped', 'Cancelled'],
+  Shipped: ['Delivered'],
+  Delivered: [],
+  Cancelled: []
+};
 
 const money = value =>
   Math.round((value + Number.EPSILON) * 100);
@@ -285,40 +295,65 @@ router.patch(
   protect,
   adminOnly,
   async (req, res, next) => {
+    let session;
+
     try {
       const { status } = req.body;
 
-      const allowedStatuses = [
-        'Placed',
-        'Processing',
-        'Shipped',
-        'Delivered',
-        'Cancelled'
-      ];
-
-      if (!allowedStatuses.includes(status)) {
+      if (!Object.hasOwn(STATUS_TRANSITIONS, status)) {
         return res.status(400).json({
           message: 'Invalid order status'
         });
       }
 
-      const order = await Order.findById(req.params.id);
+      session = await mongoose.startSession();
 
-      if (!order) {
-        return res.status(404).json({
-          message: 'Order not found'
-        });
-      }
+      let updatedOrder;
 
-      order.status = status;
-      await order.save();
+      // The status change and the stock return succeed or fail together.
+      await session.withTransaction(async () => {
+        const order = await Order.findById(
+          req.params.id
+        ).session(session);
+
+        if (!order) {
+          throw orderError('Order not found', 404);
+        }
+
+        if (!STATUS_TRANSITIONS[order.status]?.includes(status)) {
+          throw orderError(
+            `An order cannot move from ${order.status} to ${status}.`,
+            409
+          );
+        }
+
+        if (status === 'Cancelled') {
+          // Products deleted since the order simply match nothing here.
+          for (const item of order.items) {
+            await Product.updateOne(
+              { _id: item.product },
+              { $inc: { stock: item.quantity } },
+              { session }
+            );
+          }
+        }
+
+        order.status = status;
+        await order.save({ session });
+
+        updatedOrder = order;
+      });
 
       return res.json({
         message: 'Order status updated successfully',
-        order
+        order: updatedOrder
       });
     } catch (error) {
       next(error);
+    } finally {
+      if (session) {
+        await session.endSession();
+      }
     }
   }
 );

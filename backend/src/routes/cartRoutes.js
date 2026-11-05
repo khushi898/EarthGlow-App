@@ -2,8 +2,10 @@ import { Router } from 'express';
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { MAX_QUANTITY } from '../utils/limits.js';
 
 const router = Router();
+const TOO_MANY = `You can order up to ${MAX_QUANTITY} of each product`;
 router.use(protect);
 
 async function getOrCreateCart(userId) {
@@ -30,6 +32,7 @@ router.post('/items', async (req, res, next) => {
     if (product.stock < qty) return res.status(400).json({ message: 'Not enough stock available' });
     const cart = await getOrCreateCart(req.user._id);
     const item = cart.items.find(i => i.product.toString() === productId);
+    if ((item?.quantity ?? 0) + qty > MAX_QUANTITY) return res.status(400).json({ message: TOO_MANY });
     if (item) {
       if (item.quantity + qty > product.stock) return res.status(400).json({ message: 'Quantity exceeds available stock' });
       item.quantity += qty;
@@ -44,6 +47,7 @@ router.patch('/items/:productId', async (req, res, next) => {
   try {
     const qty = Number(req.body.quantity);
     if (!Number.isInteger(qty) || qty < 1) return res.status(400).json({ message: 'Quantity must be a positive integer' });
+    if (qty > MAX_QUANTITY) return res.status(400).json({ message: TOO_MANY });
     const product = await Product.findById(req.params.productId);
     if (!product) return res.status(404).json({ message: 'Product not found' });
     if (qty > product.stock) return res.status(400).json({ message: 'Quantity exceeds available stock' });
