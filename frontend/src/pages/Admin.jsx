@@ -1,6 +1,25 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/client.js";
 
+const EMPTY_FORM = {
+  name: "",
+  price: "",
+  category: "",
+  stock: "",
+  description: "",
+  image: "",
+  images: [],
+};
+
+// Mirrors STATUS_TRANSITIONS in the backend's orderRoutes.js.
+const NEXT_STATUSES = {
+  Placed: ["Processing", "Cancelled"],
+  Processing: ["Shipped", "Cancelled"],
+  Shipped: ["Delivered"],
+  Delivered: [],
+  Cancelled: [],
+};
+
 export default function Admin() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -8,14 +27,7 @@ export default function Admin() {
   const [statusFilter,setStatusFilter]=useState("All");
   const [orderSort,setOrderSort]=useState("newest");
   const [imagePreview, setImagePreview]=useState("");
-  const [form, setForm] = useState({
-    name: "",
-    price: "",
-    category: "",
-    stock:"",
-    description: "",
-    image: "",
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
 
   const [editingId, setEditingId] = useState(null);
  
@@ -23,8 +35,21 @@ export default function Admin() {
   // LOAD PRODUCTS
   const loadProducts = async () => {
     try {
-      const { data } = await api.get("/products?1&limit=100");
-      setProducts(data.products || []);
+      const allProducts = [];
+      let page = 1;
+      let pages = 1;
+
+      // The API returns at most 48 products per request.
+      do {
+        const { data } = await api.get("/products", {
+          params: { page, limit: 48 },
+        });
+        allProducts.push(...data.products);
+        pages = data.pages;
+        page += 1;
+      } while (page <= pages);
+
+      setProducts(allProducts);
     } catch (error) {
       console.error("Failed to load products:", error);
     }
@@ -75,9 +100,8 @@ export default function Admin() {
         stock: Number(form.stock),
         description: form.description,
         image: form.image,
-        images:form.images || [],
+        images: form.images,
       };
-      setImagePreview("");
 
       if (editingId) {
         await api.patch(`/products/${editingId}`, productData);
@@ -89,15 +113,8 @@ export default function Admin() {
         alert("Product added successfully!");
       }
 
-      setForm({
-        name: "",
-        price: "",
-        category: "",
-        description: "",
-        image: "",
-        images:[],
-      });
-
+      setForm(EMPTY_FORM);
+      setImagePreview("");
       setEditingId(null);
 
       await loadProducts();
@@ -117,11 +134,12 @@ export default function Admin() {
 
     setForm({
       name: product.name || "",
-      price: product.price || "",
+      price: product.price ?? "",
       category: product.category || "",
-      stock: product.stock || "",
+      stock: product.stock ?? "",
       description: product.description || "",
       image: product.image || "",
+      images: product.images || [],
     });
 
     window.scrollTo({
@@ -133,14 +151,8 @@ export default function Admin() {
   // CANCEL EDIT
   const handleCancelEdit = () => {
     setEditingId(null);
-
-    setForm({
-      name: "",
-      price: "",
-      category: "",
-      description: "",
-      image: "",
-    });
+    setImagePreview("");
+    setForm(EMPTY_FORM);
   };
 
   // DELETE PRODUCT
@@ -193,21 +205,27 @@ export default function Admin() {
     `How many units do you want to add to ${product.name}?`
   );
 
-  if (!amount || Number(amount) <= 0) return;
+  if (amount === null) return;
+
+  const quantity = Number(amount);
+
+  if (!Number.isInteger(quantity) || quantity < 1) {
+    alert("Please enter a whole number of 1 or more.");
+    return;
+  }
 
   try {
-    await api.patch(`/products/${product._id}`, {
-      
-      stock: Number(product.stock || 0) + Number(amount),
-    });
+    await api.post(`/products/${product._id}/restock`, { quantity });
 
-     await loadProducts();
+    await loadProducts();
   } catch (error) {
-  console.log("RESTOCK ERROR:", error.response?.status);
-  console.log("RESTOCK DATA:", error.response?.data);
-  console.log("FULL ERROR:", error);
-  alert("Could not update stock");
-}
+    console.error("Failed to restock:", error);
+
+    alert(
+      error.response?.data?.message ||
+        "Could not update stock"
+    );
+  }
 }
 
   return (
@@ -302,8 +320,8 @@ export default function Admin() {
   <option value="">Select category</option>
   <option value="Face Care">Face</option>
   <option value="Hair Care">Hair</option>
-  <option value="Body">Body</option>
-  <option value="Baby">Baby</option>
+  <option value="Body Care">Body</option>
+  <option value="Baby Care">Baby</option>
   <option value="Moisturisers">Moisturisers</option>
   <option value="Serums">Serums</option>
 </select>
@@ -631,7 +649,7 @@ export default function Admin() {
               £{Number(order.total || 0).toFixed(2)}
 
               <br />
-              <strong>Ordered:</strong>{""}
+              <strong>Ordered:</strong>{" "}
               {order.createdAt
               ?
               new Date(order.createdAt).toLocaleDateString("en-GB")
@@ -640,12 +658,12 @@ export default function Admin() {
 
 
 <strong>Items:</strong>{" "}
-{order.items?.reduce((total, item) => total + (item.qty || 1), 0) || 0}
+{order.items?.reduce((total, item) => total + item.quantity, 0) || 0}
 <br />
 {order.items?.map((item, index) => (
   <div key={index} className="order-item-name">
     <strong>Product:</strong>{" "}
-    {item.product?.name || item.name || "Product"} × {item.qty || 1}
+    {item.name || "Product"} × {item.quantity}
   </div>
 ))}
 
@@ -658,12 +676,11 @@ export default function Admin() {
        className={`status-select status-${order.status.toLowerCase()}`}
        value={order.status}
        onChange={(e)=>handleStatusChange(order._id, e.target.value)}
+       disabled={!NEXT_STATUSES[order.status]?.length}
 >
-  <option value="Placed">Placed</option>
-  <option value="Processing">Processing</option>
-  <option value="Shipped">Shipped</option>
-  <option value="Delivered">Delivered</option>
-  <option value="Cancelled">Cancelled</option>
+  {[order.status, ...(NEXT_STATUSES[order.status] || [])].map((status) => (
+    <option key={status} value={status}>{status}</option>
+  ))}
 </select>
             </div>
           ))
