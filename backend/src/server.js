@@ -32,7 +32,21 @@ app.use(cors({
   ]
 }));
 
-app.use(express.json({ limit: '10mb' }));
+// Only product requests can carry uploaded images.
+app.use('/api/products', express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '100kb' }));
+
+// Limit automated account creation.
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    message:
+      'Too many accounts created. Please try again later.'
+  }
+});
 
 // Limit repeated password login attempts.
 const loginLimiter = rateLimit({
@@ -83,6 +97,7 @@ const resetPasswordLimiter = rateLimit({
 });
 
 // Apply limits to specific authentication endpoints.
+app.use('/api/auth/register', registerLimiter);
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/verify-login', otpLimiter);
 app.use('/api/auth/forgot-password', forgotPasswordLimiter);

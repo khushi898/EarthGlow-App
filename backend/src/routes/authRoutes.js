@@ -18,6 +18,23 @@ const RESET_LIFETIME = 15 * 60 * 1000;
 const OTP_COOLDOWN = 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
 
+// bcrypt only uses the first 72 bytes of a password.
+const MAX_PASSWORD_BYTES = 72;
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const passwordProblem = password => {
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters.';
+  }
+
+  if (Buffer.byteLength(password) > MAX_PASSWORD_BYTES) {
+    return `Password must be at most ${MAX_PASSWORD_BYTES} characters.`;
+  }
+
+  return null;
+};
+
 const normalizeEmail = value =>
   String(value || '').trim().toLowerCase();
 
@@ -57,6 +74,12 @@ const isOtpTestAccount = email => {
   );
 };
 
+// Test mode is for Resend's test sender, which can only email the test account.
+// With a verified domain, leave test mode off and every customer can receive email.
+const canReceiveEmail = email =>
+  process.env.EMAIL_TEST_MODE !== 'true' ||
+  isOtpTestAccount(email);
+
 // Register customer
 router.post('/register', async (req, res, next) => {
   try {
@@ -74,10 +97,16 @@ router.post('/register', async (req, res, next) => {
       });
     }
 
-    if (password.length < 8) {
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
       return res.status(400).json({
-        message: 'Password must be at least 8 characters'
+        message: 'Please enter a valid email address.'
       });
+    }
+
+    const problem = passwordProblem(password);
+
+    if (problem) {
+      return res.status(400).json({ message: problem });
     }
 
     if (await User.findOne({ email: normalizedEmail })) {
@@ -258,15 +287,17 @@ router.post('/forgot-password', async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
 
+    // The same reply for every address, so it never reveals who has an account.
     const response = {
       message:
-        'If the account exists, a password-reset email will be sent.'
+        process.env.EMAIL_TEST_MODE === 'true'
+          ? 'This demo only sends reset emails to its test account, so other addresses will not receive one.'
+          : 'If the account exists, a password-reset email will be sent.'
     };
 
     const user = await User.findOne({ email });
 
-    // Resend test sender can only email the test account.
-    if (!user || !isOtpTestAccount(email)) {
+    if (!user || !canReceiveEmail(email)) {
       return res.json(response);
     }
 
@@ -300,10 +331,16 @@ router.post('/forgot-password', async (req, res, next) => {
     const resetLink =
       `${frontendUrl.replace(/\/$/, '')}/reset-password?token=${token}`;
 
-    await sendPasswordResetEmail(
-      user.email,
-      resetLink
-    );
+    // A failed send is logged, not returned: an error here
+    // would reveal that this address has an account.
+    try {
+      await sendPasswordResetEmail(
+        user.email,
+        resetLink
+      );
+    } catch (emailError) {
+      console.error('Password-reset email failed:', emailError);
+    }
 
     return res.json(response);
   } catch (error) {
@@ -323,10 +360,10 @@ router.post('/reset-password', async (req, res, next) => {
       });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({
-        message: 'Password must be at least 8 characters.'
-      });
+    const problem = passwordProblem(password);
+
+    if (problem) {
+      return res.status(400).json({ message: problem });
     }
 
     const user = await User.findOne({
@@ -371,7 +408,7 @@ router.post('/reset-password', async (req, res, next) => {
 // Current user
 router.get('/me', protect, (req, res) => {
   res.json({
-    user: req.user
+    user: publicUser(req.user)
   });
 });
 
