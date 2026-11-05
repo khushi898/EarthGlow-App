@@ -52,7 +52,7 @@ export default function Home({ onAdd }) {
       </div>
       <div className="hero-art">
         <div className="hero-circle"></div>
-        <img src="/images/earthglow-hero.png" alt="Skincare products arranged in natural light" />
+        <img src="/images/earthglow-hero.webp" alt="Skincare products arranged in natural light" />
         <div className="hero-sticker">NATURE<br />MEETS<br />SELF-CARE</div>
       </div>
     </section>
