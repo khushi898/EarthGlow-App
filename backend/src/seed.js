@@ -15,14 +15,35 @@ const products = [
   { name: 'Tea Tree Spot Gel', slug: 'tea-tree-spot-gel', description: 'A targeted gel for a simple skincare routine.', category: 'Face Care', price: 5.99, compareAtPrice: null, image: 'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=900&q=80', stock: 32, featured: false }
 ];
 
+// Seeding deletes every product, so a remote database needs an explicit --force.
+const isLocalDatabase = /^mongodb:\/\/(127\.0\.0\.1|localhost)[:/]/.test(process.env.MONGO_URI || '');
+
+if (!isLocalDatabase && !process.argv.includes('--force')) {
+  console.error('Refusing to seed: MONGO_URI is not a local database and seeding deletes all products. Pass --force to run it anyway.');
+  process.exit(1);
+}
+
 try {
   await mongoose.connect(process.env.MONGO_URI);
   await Product.deleteMany({});
   await Product.insertMany(products);
-  const email = 'admin@earthglow.local';
-  const passwordHash = await bcrypt.hash('ChangeMe123!', 12);
-  await User.findOneAndUpdate({ email }, { name: 'EarthGlow Admin', email, passwordHash, role: 'admin' }, { upsert: true, new: true });
-  console.log(`Seeded ${products.length} products and demo admin ${email}`);
+  console.log(`Seeded ${products.length} products`);
+
+  // The admin password comes from .env so it is never stored in the repository.
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (email && password) {
+    const passwordHash = await bcrypt.hash(password, 12);
+    await User.findOneAndUpdate(
+      { email: email.trim().toLowerCase() },
+      { name: 'EarthGlow Admin', passwordHash, role: 'admin', $inc: { tokenVersion: 1 } },
+      { upsert: true, new: true }
+    );
+    console.log(`Admin account ready: ${email}`);
+  } else {
+    console.log('No admin created: set ADMIN_EMAIL and ADMIN_PASSWORD in .env to create one.');
+  }
 } catch (error) {
   console.error(error);
   process.exitCode = 1;
