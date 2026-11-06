@@ -59,9 +59,9 @@ Health check: http://localhost:5000/api/health
 
 The two data scripts do different jobs:
 - `npm run seed` **deletes all products**, then adds 8 sample products and the admin account from `.env`. It refuses to run against a non-local database unless you run `node src/seed.js --force`.
-- `node src/addProducts.js` adds the 35 catalogue products, or updates them if they already exist. It deletes nothing.
+- `node src/addProducts.js` adds the 34 catalogue products, or updates them if they already exist. It deletes nothing.
 
-Running both gives 43 products. The live demo only has the 35 catalogue products.
+Running both gives 42 products. The live demo only has the 34 catalogue products.
 
 ## 2) Start the frontend
 Open another terminal:
@@ -110,7 +110,7 @@ Sending email needs `RESEND_API_KEY`. The app runs without it, but password-rese
 ## Tests
 ```bash
 cd backend && npm test    # 96 API tests
-cd frontend && npm test   # 42 interface tests
+cd frontend && npm test   # 43 interface tests
 ```
 Backend tests run the real API with [Vitest](https://vitest.dev) and Supertest against a temporary in-memory MongoDB, so they need no `.env` and never touch a real database. The first run downloads MongoDB, which can take a few minutes. Emails are replaced with a stand-in, so none are sent.
 

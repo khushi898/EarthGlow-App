@@ -44,7 +44,6 @@ const products = [
   // HAIR CARE
   ['Coconut Nourishing Shampoo', 'Hair Care', 10.49, 40, 'coconut-nourishing-shampoo.webp'],
   ['Shea Butter Hair Conditioner', 'Hair Care', 9.49, 35, 'shea-butter-hair-conditioner.webp'],
-  ['Rosemary Scalp Oil', 'Hair Care', 11.99, 30, 'rosemary oil.webp'],
 
   // LIP CARE
   ['Nourishing Lip Balm', 'Face Care', 5.99, 40, 'nourishing-lip-balm.webp'],
