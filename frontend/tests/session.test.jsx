@@ -150,6 +150,20 @@ describe('signing in', () => {
   });
 });
 
+describe('site footer', () => {
+  it('describes the demo professionally, with no made-up contact details', async () => {
+    mockApi(siteRoutes);
+
+    renderApp();
+
+    const footer = document.querySelector('.footer');
+    expect(footer).toHaveTextContent('A demo e-commerce project');
+    expect(footer).not.toHaveTextContent(/student|mamaearth|\.example/i);
+    expect(within(footer).getByRole('link', { name: 'View source on GitHub' }))
+      .toHaveAttribute('href', 'https://github.com/khushi898/EarthGlow-App');
+  });
+});
+
 describe('site header', () => {
   it('builds the menu from the real categories', async () => {
     mockApi(siteRoutes);
