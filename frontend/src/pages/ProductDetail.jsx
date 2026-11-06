@@ -92,6 +92,6 @@ export default function ProductDetail({ onAdd }) {
 
        <p className="stock-note">
       {product.stock > 0 ? `${product.stock} available` : 'Currently out of stock'}</p><button className="button" disabled={!product.stock} onClick={() => onAdd(product,quantity)}>
-      {product.stock>0?"Add to Bag":"Out of Stock"}</button><p className="detail-small">Demo product for this learning project. Product claims and imagery are illustrative.</p><Link to="/">← Continue shopping</Link></div>
+      {product.stock>0?"Add to Bag":"Out of Stock"}</button><p className="detail-small">Demo product. Product details and images are illustrative.</p><Link to="/">← Continue shopping</Link></div>
   </main>;
 }

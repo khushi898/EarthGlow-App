@@ -175,8 +175,8 @@ export default function Checkout({ items, refreshCart }) {
         </div>
 
         <p className="muted">
-          This educational checkout does not collect
-          payment details.
+          This is a demo checkout. No payment details
+          are collected.
         </p>
       </aside>
     </main>

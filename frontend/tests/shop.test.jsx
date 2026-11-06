@@ -127,6 +127,33 @@ describe('adding to the bag', () => {
   });
 });
 
+describe('demo notices', () => {
+  it('describes a product page as a demo in professional wording', async () => {
+    mockApi({ ...baseRoutes, 'GET /products/p1': { product: product() } });
+
+    renderApp('/products/p1');
+
+    expect(await screen.findByText(/^Demo product\./)).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(/learning project/i);
+  });
+
+  it('says checkout collects no payment, in professional wording', async () => {
+    mockApi({
+      ...baseRoutes,
+      'GET /cart': cartWith({ product: product(), quantity: 1 })
+    });
+    signInAs(CUSTOMER);
+    const user = userEvent.setup();
+
+    renderApp('/cart');
+    await user.click(await screen.findByRole('checkbox', { name: 'Select Rose Cream' }));
+    await user.click(screen.getByRole('button', { name: 'Continue to checkout' }));
+
+    expect(await screen.findByText(/This is a demo checkout/)).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(/educational/i);
+  });
+});
+
 describe('bag and checkout', () => {
   const bagRoutes = {
     ...baseRoutes,

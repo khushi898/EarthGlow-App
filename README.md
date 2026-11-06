@@ -110,7 +110,7 @@ Sending email needs `RESEND_API_KEY`. The app runs without it, but password-rese
 ## Tests
 ```bash
 cd backend && npm test    # 96 API tests
-cd frontend && npm test   # 43 interface tests
+cd frontend && npm test   # 45 interface tests
 ```
 Backend tests run the real API with [Vitest](https://vitest.dev) and Supertest against a temporary in-memory MongoDB, so they need no `.env` and never touch a real database. The first run downloads MongoDB, which can take a few minutes. Emails are replaced with a stand-in, so none are sent.
 
